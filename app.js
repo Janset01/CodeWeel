@@ -40,7 +40,7 @@ const bank=[
 const $=id=>document.getElementById(id);const cats=['Hepsi',...new Set(bank.map(x=>x[0]))];$('category').innerHTML=cats.map(x=>`<option>${x}</option>`).join('');function subtopicFor(item){const items=bank.filter(x=>x[0]===item[0]);return (subtopics[item[0]]||[])[items.indexOf(item)]||item[2]}
 function updateSubtopics(){const category=$('category').value;const options=category==='Hepsi'?[...new Set(bank.map(subtopicFor))]:subtopics[category]||[];$('subtopic').innerHTML=['Hepsi',...options].map(x=>{const option=document.createElement('option');option.textContent=x;return option.outerHTML}).join('')}
 $('category').addEventListener('change',updateSubtopics);updateSubtopics();
-let selected=null,angle=0;let records=JSON.parse(localStorage.getItem('cw-records')||'[]');let timer=null,seconds=0,timerId=null;function pool(){return bank.filter(x=>($('category').value==='Hepsi'||x[0]===$('category').value)&&($('level').value==='Hepsi'||x[1]===$('level').value)&&($('subtopic').value==='Hepsi'||subtopicFor(x)===$('subtopic').value))}const wheelColors=['#7296eb','#a8bff6','#74c5bd','#a3e0d6','#f2c27c','#f8d8a4','#bda7ed','#d8c8f7'];
+let selected=null,angle=0;let records=[];try{const saved=JSON.parse(localStorage.getItem('cw-records')||'[]');records=Array.isArray(saved)?saved:[]}catch(e){console.warn('Geçersiz çalışma geçmişi:',e)}let timer=null,seconds=0,timerId=null;function pool(){return bank.filter(x=>($('category').value==='Hepsi'||x[0]===$('category').value)&&($('level').value==='Hepsi'||x[1]===$('level').value)&&($('subtopic').value==='Hepsi'||subtopicFor(x)===$('subtopic').value))}const wheelColors=['#7296eb','#a8bff6','#74c5bd','#a3e0d6','#f2c27c','#f8d8a4','#bda7ed','#d8c8f7'];
 function paintWheel(choices){
  const count=choices.length;
  if(!count){$('wheel').style.background='#e5eaf1';$('wheel').title='Bu filtrelerde soru yok';$('spin').disabled=true;return}
@@ -49,7 +49,7 @@ function paintWheel(choices){
  $('wheel').style.background='conic-gradient('+choices.map((item,i)=>wheelColors[i%wheelColors.length]+' '+(i*slice)+'deg '+((i+1)*slice)+'deg').join(',')+')';
  $('wheel').title=choices.map((item,i)=>(i+1)+'. '+subtopicFor(item)+' — '+item[2]).join('\\n');
 }
-function refreshWheel(){if($('spin').dataset.spinning==='1')return;paintWheel(pool())}
+function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
 ['category','subtopic','level'].forEach(id=>$(id).addEventListener('change',refreshWheel));
 function spin(){
  const choices=pool();if(!choices.length)return;
