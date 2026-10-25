@@ -23,12 +23,17 @@ const path = require('node:path');
   await page.locator('#answer').fill('SELECT * FROM Ogrenciler INNER JOIN Siniflar ON Ogrenciler.sinif_id = Siniflar.id;');
   await page.locator('[data-status="Öğrendim"]').click();
   assert.match(await page.locator('#stats').innerText(), /Toplam 1 çalışma/);
+  await page.selectOption('#subtopic', {label:'UPDATE'});
+  assert.equal(await page.locator('#question').innerText(),'');
   await page.reload();
   assert.match(await page.locator('#stats').innerText(), /Toplam 1 çalışma/);
   await page.selectOption('#category', {label:'SQL'});
   await page.selectOption('#level', {label:'Başlangıç'});
   await page.selectOption('#subtopic', {label:'JOIN'});
   assert(await page.locator('#spin').isDisabled());
+  await page.evaluate(()=>localStorage.setItem('cw-records','not-json'));
+  await page.reload();
+  assert.match(await page.locator('#stats').innerText(), /Toplam 0 çalışma/);
   assert.equal(errors.length,0,'Browser errors: '+errors.join('; '));
   console.log('PASS: category/subtopic/level, spin, progress persistence, empty filter, browser errors');
  } finally {await browser.close();}
