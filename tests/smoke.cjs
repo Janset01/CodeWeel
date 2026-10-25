@@ -1,0 +1,35 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const { pathToFileURL } = require('node:url');
+const path = require('node:path');
+(async () => {
+ const browser = await chromium.launch({headless:true});
+ try {
+  const page = await browser.newPage();
+  const errors=[];
+  page.on('pageerror', e=>errors.push(e.message));
+  await page.goto(pathToFileURL(path.resolve('index.html')).href);
+  await page.waitForSelector('#subtopic option');
+  assert((await page.locator('#category option').count()) > 2);
+  await page.selectOption('#category', {label:'SQL'});
+  assert.deepEqual(await page.locator('#subtopic option').allTextContents(), ['Hepsi','SELECT ve WHERE','UPDATE','JOIN']);
+  await page.selectOption('#level', {label:'İleri'});
+  await page.selectOption('#subtopic', {label:'JOIN'});
+  await page.locator('#spin').click();
+  assert(await page.locator('#category').isDisabled());
+  await page.waitForTimeout(3200);
+  assert.match(await page.locator('#question').innerText(), /JOIN/);
+  assert.match(await page.locator('#topic').innerText(), /SQL.*JOIN.*İleri/);
+  await page.locator('#answer').fill('SELECT * FROM Ogrenciler INNER JOIN Siniflar ON Ogrenciler.sinif_id = Siniflar.id;');
+  await page.locator('[data-status="Öğrendim"]').click();
+  assert.match(await page.locator('#stats').innerText(), /Toplam 1 çalışma/);
+  await page.reload();
+  assert.match(await page.locator('#stats').innerText(), /Toplam 1 çalışma/);
+  await page.selectOption('#category', {label:'SQL'});
+  await page.selectOption('#level', {label:'Başlangıç'});
+  await page.selectOption('#subtopic', {label:'JOIN'});
+  assert(await page.locator('#spin').isDisabled());
+  assert.equal(errors.length,0,'Browser errors: '+errors.join('; '));
+  console.log('PASS: category/subtopic/level, spin, progress persistence, empty filter, browser errors');
+ } finally {await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});
