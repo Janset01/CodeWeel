@@ -108,7 +108,7 @@ let currentExercise=null,spinning=false,spinTimeout=null;
 const rowHeight=86;
 function paintWheel(choices){
  const track=$('topicTrack');track.replaceChildren();
- $('wheel').disabled=!choices.length;
+ $('wheel').disabled=!choices.length;const spinButton=$('spin');if(spinButton)spinButton.disabled=!choices.length;
  if(!choices.length){track.textContent='Bu filtrelere uygun konu bulunamadı.';return}
  const items=[...choices,...choices,...choices,...choices,...choices];
  items.forEach((item,i)=>{const row=document.createElement('span');row.className='topic-entry';const title=document.createElement('span');title.textContent=item.label;const badge=document.createElement('small');badge.textContent=String((i%choices.length)+1).padStart(2,'0');row.append(title,badge);track.appendChild(row)});
@@ -142,7 +142,7 @@ function spin(){
  const index=choices.indexOf(picked),targetIndex=choices.length*3+index;
  spinning=true;selected=null;
  ['category','subtopic','level'].forEach(id=>$(id).disabled=true);
- $('wheel').disabled=true;
+ $('wheel').disabled=true;$('spin').disabled=true;
  positionTrack(targetIndex,true);
  spinTimeout=setTimeout(()=>{
   spinning=false;selected=picked.base;selectedLabel=picked.label;currentExercise=exerciseFor(picked);
@@ -151,10 +151,10 @@ function spin(){
   $('task').textContent=currentExercise[0];
   $('answer').value='';$('explanation').value='';$('feedback').textContent='';
   ['category','subtopic','level'].forEach(id=>$(id).disabled=false);
-  $('wheel').disabled=false;
+  $('wheel').disabled=false;$('spin').disabled=false;
  },3050);
 }
-refreshWheel();$('wheel').onclick=spin;
+refreshWheel();$('spin').onclick=spin;
 function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null}
 let audioContext=null;
 function playTimerChime(){
