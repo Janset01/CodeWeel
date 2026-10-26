@@ -204,4 +204,44 @@ exportButton.onclick=()=>{
  link.remove();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
+// Restore a previously downloaded CodeWeel history backup.
+const importButton=document.createElement('button');
+importButton.type='button';
+importButton.id='importHistory';
+importButton.textContent='📤 Çalışma geçmişini geri yükle';
+importButton.style.margin='8px';
+const importInput=document.createElement('input');
+importInput.type='file';
+importInput.accept='.json,application/json';
+importInput.hidden=true;
+$('clear').insertAdjacentElement('beforebegin',importButton);
+importButton.insertAdjacentElement('afterend',importInput);
+importButton.onclick=()=>importInput.click();
+importInput.onchange=async()=>{
+ const file=importInput.files&&importInput.files[0];
+ if(!file)return;
+ try{
+  if(file.size>5*1024*1024)throw new Error('Dosya 5 MB sınırını aşıyor.');
+  const backup=JSON.parse(await file.text());
+  if(!backup||backup.format!=='codeweel-history'||backup.version!==1||!Array.isArray(backup.records))throw new Error('Bu dosya geçerli bir CodeWeel yedeği değil.');
+  if(backup.records.length>10000)throw new Error('Yedekte çok fazla kayıt var.');
+  const keys=['category','question','status','date','explanation','answer'];
+  const clean=backup.records.map(row=>{
+   if(!row||typeof row!=='object'||Array.isArray(row))throw new Error('Yedekte geçersiz kayıt var.');
+   const result={};
+   for(const key of keys){
+    const value=row[key]??'';
+    if(typeof value!=='string'||value.length>50000)throw new Error('Yedekte geçersiz alan var: '+key);
+    result[key]=value;
+   }
+   return result;
+  });
+  if(!confirm(clean.length+' kayıt geri yüklenecek. Mevcut '+records.length+' kayıt değiştirilecek. Devam edilsin mi?'))return;
+  localStorage.setItem('cw-records',JSON.stringify(clean));
+  records=clean;
+  render();
+  $('feedback').textContent=clean.length+' çalışma kaydı geri yüklendi.';
+ }catch(error){alert('Yedek geri yüklenemedi: '+error.message)}
+ finally{importInput.value=''}
+};
 $('clear').onclick=()=>{if(confirm('Tüm çalışma geçmişi silinsin mi?')){records=[];localStorage.removeItem('cw-records');render()}};let recognition=null;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(Speech){recognition=new Speech();recognition.lang='tr-TR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)$('explanation').value+=e.results[i][0].transcript+' '};recognition.onerror=e=>{$('mic').textContent='🎙️ Sesle yazmayı başlat';alert('Mikrofon kullanılamadı: '+e.error)};recognition.onend=()=>{$('mic').textContent='🎙️ Sesle yazmayı başlat'};let listening=false;$('mic').onclick=()=>{try{if(listening){recognition.stop();listening=false}else{recognition.start();listening=true;$('mic').textContent='⏹️ Kaydı durdur'}}catch(e){alert(e.message)}};recognition.onend=()=>{listening=false;$('mic').textContent='🎙️ Sesle yazmayı başlat'}}else{$('mic').disabled=true;$('mic').textContent='Ses tanıma bu tarayıcıda desteklenmiyor'}render();
