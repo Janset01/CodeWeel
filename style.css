@@ -53,3 +53,6 @@ main>.panel:not(.wheel-panel) .controls{justify-content:flex-start;gap:12px}
 .selector-caption{color:#74584a;font-size:13px;margin:12px 0 0}
 @media(max-width:1050px){.workspace{grid-template-columns:1fr}.hero-copy,.workspace .wheel-panel{grid-column:1;grid-row:auto}}
 @media(max-width:700px){.workspace{display:flex;flex-direction:column}.workspace .wheel-panel{width:100%}.topic-selector{height:320px}.topic-entry{min-height:68px;padding:10px 14px}.topic-track{padding:0 14px}.selector-focus{height:82px}.selector-heading{font-size:10px}}
+
+/* Keep the explicit spin control; remove the old discover CTA */
+.workspace .wheel-panel #spin{display:inline-flex;align-items:center;justify-content:center;margin:10px auto 16px;padding:13px 30px;background:#60784b;color:#fffaf4;font-size:15px;border-radius:13px}
