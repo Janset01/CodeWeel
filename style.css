@@ -35,3 +35,21 @@ main>.panel:not(.wheel-panel) .controls{justify-content:flex-start;gap:12px}
 #calisma #researchTime,#calisma #speechTime{width:100%;max-width:170px;min-height:42px;padding:9px 12px}
 #calisma .controls:has(#researchTime) button,#calisma .controls:has(#speechTime) button{flex:0 0 auto;min-height:42px}
 @media(max-width:550px){#calisma .controls:has(#researchTime),#calisma .controls:has(#speechTime){gap:9px;flex-wrap:nowrap}#calisma .controls:has(#researchTime) label,#calisma .controls:has(#speechTime) label{flex:0 1 145px;width:145px;max-width:145px}#calisma #researchTime,#calisma #speechTime{max-width:145px;font-size:13px}#calisma .controls:has(#researchTime) button,#calisma .controls:has(#speechTime) button{font-size:12px;padding:10px 11px;white-space:nowrap}}
+
+/* CodeWeel original vertical topic stream */
+.workspace{grid-template-columns:minmax(230px,.75fr) minmax(0,1.6fr);gap:30px}
+.workspace .wheel-panel{grid-column:2;grid-row:auto;padding:28px}
+.selector-shell{max-width:690px;margin:20px auto 14px}
+.selector-heading{font-size:12px;letter-spacing:3px;font-weight:850;color:#865166;margin-bottom:12px}
+.selector-heading span{color:#60784b;padding:0 10px}
+.topic-selector{display:block;position:relative;width:100%;height:370px;overflow:hidden;border-radius:25px;border:1px solid #b99685;background:linear-gradient(180deg,#d8c1ae,#f6e9db 20%,#f6e9db 80%,#d8c1ae);padding:0;box-shadow:inset 0 0 32px #643e2a1c,0 12px 25px #42182722;cursor:pointer;filter:none!important}
+.topic-selector:focus-visible{outline:4px solid #60784b;outline-offset:4px}
+.topic-track{position:absolute;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:0 24px;will-change:transform}
+.topic-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:74px;padding:13px 22px;border-radius:17px;border:1px solid #cbb3a0;background:#fff9f2;color:#67463c;text-align:left;box-shadow:0 3px 8px #3d23151a;font-size:clamp(14px,2vw,19px);font-weight:750}
+.topic-entry small{font-size:10px;letter-spacing:1px;color:#9c7866;flex-shrink:0}
+.topic-entry.active{background:#581c32;color:#fff3e5;border-color:#581c32;box-shadow:0 8px 24px #42182738}
+.topic-entry.active small{color:#e8b4c2}
+.selector-focus{position:absolute;top:50%;left:12px;right:12px;height:90px;transform:translateY(-50%);border:2px solid #60784b;border-radius:22px;pointer-events:none;box-shadow:0 0 0 900px #f5e9db16}
+.selector-caption{color:#74584a;font-size:13px;margin:12px 0 0}
+@media(max-width:1050px){.workspace{grid-template-columns:1fr}.hero-copy,.workspace .wheel-panel{grid-column:1;grid-row:auto}}
+@media(max-width:700px){.workspace{display:flex;flex-direction:column}.workspace .wheel-panel{width:100%}.topic-selector{height:320px}.topic-entry{min-height:68px;padding:10px 14px}.topic-track{padding:0 14px}.selector-focus{height:82px}.selector-heading{font-size:10px}}
