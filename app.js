@@ -73,7 +73,7 @@ function subtopicFor(item){const items=bank.filter(x=>x[0]===item[0]);return (su
 function updateSubtopics(){const category=$('category').value;const options=category==='Hepsi'?[...new Set(bank.map(subtopicFor))]:subtopics[category]||[];const sel=$('subtopic');sel.replaceChildren();['Hepsi',...options].forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o)})}
 $('category').addEventListener('change',()=>{updateSubtopics();refreshWheel()});
 updateSubtopics();
-let selected=null,selectedLabel='',angle=0;let records=[];try{const saved=JSON.parse(localStorage.getItem('cw-records')||'[]');records=Array.isArray(saved)?saved:[]}catch(e){console.warn('Geçersiz çalışma geçmişi:',e)}let timer=null,seconds=0,timerId=null;function pool(){
+let selected=null,selectedLabel='',angle=0;let records=[];try{const saved=JSON.parse(localStorage.getItem('cw-records')||'[]');records=Array.isArray(saved)?saved.filter(r=>r&&typeof r==='object'&&!Array.isArray(r)&&['category','question','status','date'].every(k=>typeof r[k]==='string')):[]}catch(e){console.warn('Geçersiz çalışma geçmişi:',e)}let timer=null,seconds=0,timerId=null;function pool(){
  const cat=$('category').value,sub=$('subtopic').value,level=$('level').value;
  const base=bank.filter(x=>(cat==='Hepsi'||x[0]===cat)&&(level==='Hepsi'||x[1]===level));
  if(sub==='Hepsi'){const seen=new Set();return base.filter(x=>{const key=x[0]+'|'+subtopicFor(x);if(seen.has(key))return false;seen.add(key);return true}).map(x=>({base:x,label:subtopicFor(x),detail:false}))}
