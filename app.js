@@ -47,9 +47,11 @@ function paintWheel(choices){
  $('spin').disabled=false;
  const slice=360/count;
  $('wheel').style.background='conic-gradient('+choices.map((item,i)=>wheelColors[i%wheelColors.length]+' '+(i*slice)+'deg '+((i+1)*slice)+'deg').join(',')+')';
- $('wheel').title=choices.map((item,i)=>(i+1)+'. '+subtopicFor(item)+' — '+item[2]).join('\\n');
+ const wheel=$('wheel');wheel.querySelectorAll('.wheel-label').forEach(el=>el.remove());
+ choices.forEach((item,i)=>{const label=document.createElement('span');label.className='wheel-label';label.textContent=subtopicFor(item);label.title=item[2];const degrees=(i+.5)*slice;label.style.transform='translate(-50%,-50%) rotate('+degrees+'deg) translateY(-105px) rotate('+(-degrees)+'deg)';wheel.appendChild(label)});
+ wheel.title=choices.map((item,i)=>(i+1)+'. '+subtopicFor(item)+' — '+item[2]).join('\\n');
 }
-function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
+function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;angle=0;$('wheel').style.transition='none';$('wheel').style.transform='rotate(0deg)';void $('wheel').offsetWidth;$('wheel').style.transition='';$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
 ['category','subtopic','level'].forEach(id=>$(id).addEventListener('change',refreshWheel));
 function spin(){
  const choices=pool();if(!choices.length)return;
