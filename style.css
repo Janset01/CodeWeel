@@ -28,3 +28,10 @@ main>.panel:not(.wheel-panel) #history>div{border-color:#a65a7066;color:#f5e9db}
 main>.panel:not(.wheel-panel) #feedback,main>.panel:not(.wheel-panel) #stats{color:#f5e9db}
 main>.panel:not(.wheel-panel) .controls{justify-content:flex-start;gap:12px}
 @media(max-width:700px){main>.panel:not(.wheel-panel){padding:20px 17px;margin:15px 0;border-radius:18px}main>.panel:not(.wheel-panel) .controls{gap:10px}main>.panel:not(.wheel-panel) label{min-width:130px}main>.panel:not(.wheel-panel) .clock{font-size:27px;margin:7px 0 16px}main>.panel:not(.wheel-panel) textarea{min-height:105px}main>.panel:not(.wheel-panel) textarea.code{min-height:125px}main>.panel:not(.wheel-panel) button{padding:12px 14px}main>.panel:not(.wheel-panel) h2{margin:9px 0 13px}}
+
+/* Compact research and speech timer selectors */
+#calisma .controls:has(#researchTime),#calisma .controls:has(#speechTime){display:flex;align-items:flex-end;justify-content:flex-start;gap:12px;flex-wrap:wrap}
+#calisma .controls:has(#researchTime) label,#calisma .controls:has(#speechTime) label{flex:0 1 170px;width:170px;min-width:0;max-width:170px}
+#calisma #researchTime,#calisma #speechTime{width:100%;max-width:170px;min-height:42px;padding:9px 12px}
+#calisma .controls:has(#researchTime) button,#calisma .controls:has(#speechTime) button{flex:0 0 auto;min-height:42px}
+@media(max-width:550px){#calisma .controls:has(#researchTime),#calisma .controls:has(#speechTime){gap:9px;flex-wrap:nowrap}#calisma .controls:has(#researchTime) label,#calisma .controls:has(#speechTime) label{flex:0 1 145px;width:145px;max-width:145px}#calisma #researchTime,#calisma #speechTime{max-width:145px;font-size:13px}#calisma .controls:has(#researchTime) button,#calisma .controls:has(#speechTime) button{font-size:12px;padding:10px 11px;white-space:nowrap}}
