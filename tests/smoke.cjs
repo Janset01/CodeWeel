@@ -9,7 +9,7 @@ const path = require('node:path');
   const errors=[];
   page.on('pageerror', e=>errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve('index.html')).href);
-  await page.waitForSelector('#subtopic option');
+  await page.locator('#subtopic option').first().waitFor({state:'attached'});
   assert((await page.locator('#category option').count()) > 2);
   await page.selectOption('#category', {label:'SQL'});
   assert.deepEqual(await page.locator('#subtopic option').allTextContents(), ['Hepsi','SELECT ve WHERE','UPDATE','JOIN']);
