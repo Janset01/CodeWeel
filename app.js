@@ -81,42 +81,81 @@ let selected=null,selectedLabel='',angle=0;let records=[];try{const saved=JSON.p
  if(!matched.length)return [];
  return (details[sub]||[sub]).map(name=>({base:matched[0],label:name,detail:true}))
 }
-const wheelColors=['#7296eb','#a8bff6','#74c5bd','#a3e0d6','#f2c27c','#f8d8a4','#bda7ed','#d8c8f7'];
-function paintWheel(choices){
- const wheel=$('wheel');wheel.querySelectorAll('.wheel-label').forEach(el=>el.remove());
- const count=choices.length;
- if(!count){wheel.style.background='#e5eaf1';wheel.title='Bu filtrelerde konu yok';$('spin').disabled=true;return}
- $('spin').disabled=false;
- const slice=360/count;
- wheel.style.background='conic-gradient('+choices.map((item,i)=>wheelColors[i%wheelColors.length]+' '+(i*slice)+'deg '+((i+1)*slice)+'deg').join(',')+')';
- choices.forEach((item,i)=>{const label=document.createElement('span');label.className='wheel-label';label.textContent=item.label;label.title=item.label;const degrees=(i+.5)*slice;label.style.transform='translate(-50%,-50%) rotate('+degrees+'deg) translateY(-105px) rotate('+(-degrees)+'deg)';wheel.appendChild(label)});
- wheel.title=choices.map((item,i)=>(i+1)+'. '+item.label).join('\\n');
+const practice={
+'ORDER BY':['Ogrenciler tablosunda ad, soyad ve not sütunları var. Öğrencileri notlarına göre en yüksekten en düşüğe sıralayan SQL sorgusunu yaz.','ORDER BY not DESC kullan.','SELECT ad, soyad, not FROM Ogrenciler ORDER BY not DESC;'],
+'LIMIT':['Urunler tablosundan fiyatı en yüksek ilk 5 ürünü getiren SQL sorgusunu yaz.','ORDER BY fiyat DESC ile LIMIT 5 kullan.','SELECT * FROM Urunler ORDER BY fiyat DESC LIMIT 5;'],
+'AND ve OR':['Ogrenciler tablosunda notu 70 üstünde olan ve bolumu Yazılım olan öğrencileri seçen SQL sorgusunu yaz.','WHERE koşullarını AND ile birleştir.','SELECT * FROM Ogrenciler WHERE not > 70 AND bolum = \'Yazılım\';'],
+'SELECT':['Ogrenciler tablosundan yalnızca ad ve soyad alanlarını getiren sorguyu yaz.','SELECT ad, soyad kullan.','SELECT ad, soyad FROM Ogrenciler;'],
+'WHERE':['Urunler tablosunda fiyatı 500 üzerinde olan ürünleri listeleyen SQL sorgusunu yaz.','WHERE fiyat > 500 kullan.','SELECT * FROM Urunler WHERE fiyat > 500;'],
+'INNER JOIN':['Ogrenciler ve Siniflar tablolarını sinif_id üzerinden birleştirip öğrenci adını ve sınıf adını getiren sorguyu yaz.','INNER JOIN ve ON kullan.','SELECT o.ad, s.sinif_adi FROM Ogrenciler o INNER JOIN Siniflar s ON o.sinif_id = s.id;'],
+'LEFT JOIN':['Hiç siparişi olmayanlar dahil tüm müşterileri listelemek için Musteriler ve Siparisler tablolarını birleştiren sorguyu yaz.','LEFT JOIN kullan.','SELECT * FROM Musteriler m LEFT JOIN Siparisler s ON m.id = s.musteri_id;'],
+'if ifadeleri':['Bir sayının çift olup olmadığını kontrol eden bir if örneği yaz.','Kalan operatörünü (%) kullan.','if (sayi % 2 === 0) { console.log("Çift"); }'],
+'Mantıksal operatörler':['Yaşı 18 veya üstünde olan VE üyeliği aktif olan kişiye erişim izni veren koşulu JavaScript ile yaz.','&& operatörünü kullan.','if (yas >= 18 && uyelikAktif) { console.log("İzin verildi"); }'],
+'for döngüsü':['1 ile 10 arasındaki çift sayıları ekrana yazdıran bir for döngüsü yaz.','i değerini 2 artırabilirsin.','for (let i = 2; i <= 10; i += 2) console.log(i);'],
+'while döngüsü':['1’den 5’e kadar sayıları while döngüsü ile yazdır.','Sayaç tanımla ve artır.','let i = 1; while (i <= 5) { console.log(i); i++; }'],
+'git status':['Çalışma klasöründe değiştirilen dosyaları gösteren Git komutunu yaz.','status komutu.','git status'],
+'DOM':['id değeri mesaj olan HTML elemanının metnini Merhaba olarak değiştir.','textContent kullan.','document.getElementById("mesaj").textContent = "Merhaba";']
+};
+function exerciseFor(picked){
+ if(practice[picked.label])return practice[picked.label];
+ if(!picked.detail)return [picked.base[3],picked.base[4],picked.base[5]];
+ const label=picked.label,cat=picked.base[0];
+ if(cat==='SQL')return ['SQL konusunda “'+label+'” özelliğini kullanan örnek bir sorgu yaz. Kullanacağın tablo ve sütunları da belirt.','Sorgunun sözdizimini ve WHERE/JOIN gibi gerekli bölümleri düşün.','Örnek çözümler seçilen SQL özelliğine ve tablo yapısına göre değişir.'];
+ if(['Programlama Temelleri','Algoritmalar','OOP','Web Geliştirme','Mobil Geliştirme'].includes(cat))return ['“'+label+'” kavramını kullanan küçük bir kod örneği oluştur. Kodun ne yaptığını bir cümleyle açıkla.','En basit çalışan örnekle başla.','Bu konu için tek bir doğru kod yok; sözdizimi ve davranışı kontrol et.'];
+ return ['“'+label+'” konusunda gerçek bir senaryo düşün ve ilgili komutları veya çözüm adımlarını yaz.','Kavramın temel kullanım amacını hatırla.','Çözüm seçtiğin senaryoya göre değişir.'];
 }
-function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;selectedLabel='';angle=0;$('wheel').style.transition='none';$('wheel').style.transform='rotate(0deg)';void $('wheel').offsetWidth;$('wheel').style.transition='';$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
+let currentExercise=null,spinning=false,spinTimeout=null;
+const rowHeight=86;
+function paintWheel(choices){
+ const track=$('topicTrack');track.replaceChildren();
+ $('wheel').disabled=!choices.length;
+ if(!choices.length){track.textContent='Bu filtrelere uygun konu bulunamadı.';return}
+ const items=[...choices,...choices,...choices,...choices,...choices];
+ items.forEach((item,i)=>{const row=document.createElement('span');row.className='topic-entry';const title=document.createElement('span');title.textContent=item.label;const badge=document.createElement('small');badge.textContent=String((i%choices.length)+1).padStart(2,'0');row.append(title,badge);track.appendChild(row)});
+ track.style.transition='none';track.style.transform='translateY(0px)';
+ requestAnimationFrame(()=>positionTrack(0,false));
+}
+function positionTrack(index,animate){
+ const track=$('topicTrack'),viewport=$('wheel');
+ const item=track.children[index];if(!item)return;
+ const offset=viewport.clientHeight/2-(item.offsetTop+item.offsetHeight/2);
+ track.style.transition=animate?'transform 3s cubic-bezier(.12,.72,.12,1)':'none';
+ track.style.transform='translateY('+offset+'px)';
+ track.querySelectorAll('.topic-entry').forEach((row,i)=>row.classList.toggle('active',i===index));
+}
+function refreshWheel(){
+ if(spinning)return;
+ selected=null;selectedLabel='';currentExercise=null;
+ $('topic').textContent='Konu seçmek için kartlara dokun.';
+ $('question').textContent='';
+ $('task').textContent='Bir konu seçerek alıştırmaya başla.';
+ $('answer').value='';$('explanation').value='';$('feedback').textContent='';
+ paintWheel(pool());
+}
 ['subtopic','level'].forEach(id=>$(id).addEventListener('change',refreshWheel));
 function spin(){
+ if(spinning)return;
  const choices=pool();if(!choices.length)return;
  const unseen=choices.filter(x=>!records.some(r=>r.question===x.label));
  const candidates=unseen.length?unseen:choices;
  const picked=candidates[Math.floor(Math.random()*candidates.length)];
- const index=choices.indexOf(picked),slice=360/choices.length;
- const target=(360-((index+.5)*slice)%360)%360;
- const current=((angle%360)+360)%360;
- angle+=1440+((target-current+360)%360);
- selected=null;
- $('spin').dataset.spinning='1';$('spin').disabled=true;
+ const index=choices.indexOf(picked),targetIndex=choices.length*3+index;
+ spinning=true;selected=null;
  ['category','subtopic','level'].forEach(id=>$(id).disabled=true);
- $('wheel').style.transform='rotate('+angle+'deg)';
- setTimeout(()=>{
-  selected=picked.base;selectedLabel=picked.label;
+ $('wheel').disabled=true;
+ positionTrack(targetIndex,true);
+ spinTimeout=setTimeout(()=>{
+  spinning=false;selected=picked.base;selectedLabel=picked.label;currentExercise=exerciseFor(picked);
   $('topic').textContent=selected[0]+' · '+picked.label+' · '+selected[1];
-  $('question').textContent=picked.detail?'Konu: '+picked.label+' — Bu kavramı araştırıp kendi cümlelerinle açıkla.':selected[2];$('task').textContent=picked.detail?'“'+picked.label+'” konusuyla ilgili küçük bir kod örneği yaz veya nasıl çalıştığını açıkla.':selected[3];
+  $('question').textContent='Araştır: '+picked.label+' kavramını kendi cümlelerinle açıkla.';
+  $('task').textContent=currentExercise[0];
   $('answer').value='';$('explanation').value='';$('feedback').textContent='';
-  $('spin').dataset.spinning='0';$('spin').disabled=false;
   ['category','subtopic','level'].forEach(id=>$(id).disabled=false);
- },3000);
+  $('wheel').disabled=false;
+ },3050);
 }
-refreshWheel();$('spin').onclick=spin;function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null}
+refreshWheel();$('wheel').onclick=spin;
+function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null}
 let audioContext=null;
 function playTimerChime(){
  try{
@@ -151,4 +190,4 @@ document.querySelectorAll('[data-timer]').forEach(b=>b.onclick=()=>{
  // Sesin mobil tarayıcılarda çalışabilmesi için kullanıcı tıklamasında ses motorunu hazırla.
  try{const Ctx=window.AudioContext||window.webkitAudioContext;if(Ctx){audioContext=audioContext||new Ctx();if(audioContext.state==='suspended')audioContext.resume().catch(()=>{})}}catch(e){}
  timer=setInterval(()=>{seconds=Math.max(0,seconds-1);updateClock();if(seconds===0){stopTimer();playTimerChime();showTimerMessage(clockId)}},1000);
-});['researchTime','speechTime'].forEach(id=>$(id).onchange=()=>{if(!timer){$(id==='researchTime'?'researchClock':'speechClock').textContent=fmt(Number($(id).value))}});$('hint').onclick=()=>{$('feedback').textContent=selected?'İpucu: '+selected[4]:'Önce çarkı çevir.'};$('check').onclick=()=>{if(!selected)return;$('feedback').textContent='Örnek çözüm: '+selected[5]+' — Kendi çözümünle karşılaştır. Bu sürüm kodu çalıştırmaz veya otomatik doğrulamaz.'};function render(){let count=records.length;$('stats').textContent=`Toplam ${count} çalışma · ${records.filter(r=>r.status==='Öğrendim').length} öğrenildi · ${records.filter(r=>r.status==='Tekrar etmeliyim').length} tekrar bekliyor`;$('history').innerHTML=records.slice(-15).reverse().map(r=>`<div><strong>${r.category}</strong> — ${r.question} · ${r.status} <small>(${r.date})</small></div>`).join('')||'Henüz çalışma kaydı yok.'}document.querySelectorAll('.status').forEach(b=>b.onclick=()=>{if(!selected){alert('Önce bir konu seç.');return}records.push({category:selected[0],question:selectedLabel||selected[2],status:b.dataset.status,date:new Date().toLocaleDateString('tr-TR'),explanation:$('explanation').value,answer:$('answer').value});localStorage.setItem('cw-records',JSON.stringify(records));render();$('feedback').textContent='Çalışman kaydedildi.'});$('clear').onclick=()=>{if(confirm('Tüm çalışma geçmişi silinsin mi?')){records=[];localStorage.removeItem('cw-records');render()}};let recognition=null;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(Speech){recognition=new Speech();recognition.lang='tr-TR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)$('explanation').value+=e.results[i][0].transcript+' '};recognition.onerror=e=>{$('mic').textContent='🎙️ Sesle yazmayı başlat';alert('Mikrofon kullanılamadı: '+e.error)};recognition.onend=()=>{$('mic').textContent='🎙️ Sesle yazmayı başlat'};let listening=false;$('mic').onclick=()=>{try{if(listening){recognition.stop();listening=false}else{recognition.start();listening=true;$('mic').textContent='⏹️ Kaydı durdur'}}catch(e){alert(e.message)}};recognition.onend=()=>{listening=false;$('mic').textContent='🎙️ Sesle yazmayı başlat'}}else{$('mic').disabled=true;$('mic').textContent='Ses tanıma bu tarayıcıda desteklenmiyor'}render();
+});['researchTime','speechTime'].forEach(id=>$(id).onchange=()=>{if(!timer){$(id==='researchTime'?'researchClock':'speechClock').textContent=fmt(Number($(id).value))}});$('hint').onclick=()=>{$('feedback').textContent=selected?'İpucu: '+currentExercise[1]:'Önce çarkı çevir.'};$('check').onclick=()=>{if(!selected)return;$('feedback').textContent='Örnek çözüm: '+currentExercise[2]+' — Kendi çözümünle karşılaştır. Bu sürüm kodu çalıştırmaz veya otomatik doğrulamaz.'};function render(){let count=records.length;$('stats').textContent=`Toplam ${count} çalışma · ${records.filter(r=>r.status==='Öğrendim').length} öğrenildi · ${records.filter(r=>r.status==='Tekrar etmeliyim').length} tekrar bekliyor`;$('history').innerHTML=records.slice(-15).reverse().map(r=>`<div><strong>${r.category}</strong> — ${r.question} · ${r.status} <small>(${r.date})</small></div>`).join('')||'Henüz çalışma kaydı yok.'}document.querySelectorAll('.status').forEach(b=>b.onclick=()=>{if(!selected){alert('Önce bir konu seç.');return}records.push({category:selected[0],question:selectedLabel||selected[2],status:b.dataset.status,date:new Date().toLocaleDateString('tr-TR'),explanation:$('explanation').value,answer:$('answer').value});localStorage.setItem('cw-records',JSON.stringify(records));render();$('feedback').textContent='Çalışman kaydedildi.'});$('clear').onclick=()=>{if(confirm('Tüm çalışma geçmişi silinsin mi?')){records=[];localStorage.removeItem('cw-records');render()}};let recognition=null;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(Speech){recognition=new Speech();recognition.lang='tr-TR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)$('explanation').value+=e.results[i][0].transcript+' '};recognition.onerror=e=>{$('mic').textContent='🎙️ Sesle yazmayı başlat';alert('Mikrofon kullanılamadı: '+e.error)};recognition.onend=()=>{$('mic').textContent='🎙️ Sesle yazmayı başlat'};let listening=false;$('mic').onclick=()=>{try{if(listening){recognition.stop();listening=false}else{recognition.start();listening=true;$('mic').textContent='⏹️ Kaydı durdur'}}catch(e){alert(e.message)}};recognition.onend=()=>{listening=false;$('mic').textContent='🎙️ Sesle yazmayı başlat'}}else{$('mic').disabled=true;$('mic').textContent='Ses tanıma bu tarayıcıda desteklenmiyor'}render();
