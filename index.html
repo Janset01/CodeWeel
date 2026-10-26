@@ -7,17 +7,23 @@
 @media(max-width:550px){#calisma .clock,#anlat .clock{font-size:clamp(52px,16vw,76px)}}
 </style><script src="app.js?v=6"></script><script>
 (function(){
-const research=document.getElementById('researchClock'),narration=document.getElementById('anlat');
-if(!research||!narration)return;
-let wasRunning=false,handled=false;
-const observer=new MutationObserver(()=>{
-const active=research.textContent.trim();
-if(active!=='00:00'){wasRunning=true;handled=false;return;}
-if(!wasRunning||handled)return;
+const research=document.getElementById('researchClock');
+const narration=document.getElementById('anlat');
 const notice=document.getElementById('timerNotice');
-if(!notice||!notice.textContent.includes('Araştırma süren doldu'))return;
-handled=true;wasRunning=false;
-narration.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+if(!research||!narration)return;
+let researchStarted=false;
+let completed=false;
+document.querySelector('[data-timer="researchTime"]')?.addEventListener('click',()=>{
+  if(research.textContent.trim()!=='00:00'){researchStarted=true;completed=false;}
+});
+const observer=new MutationObserver(()=>{
+  if(research.textContent.trim()!=='00:00')return;
+  if(!researchStarted||completed)return;
+  completed=true;
+  researchStarted=false;
+  setTimeout(()=>{
+    narration.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+  },150);
 });
 observer.observe(research,{childList:true,characterData:true,subtree:true});
 })();
