@@ -193,7 +193,7 @@ exportButton.style.margin='8px';
 $('clear').insertAdjacentElement('beforebegin',exportButton);
 exportButton.onclick=()=>{
  if(!records.length){alert('Yedeklenecek çalışma kaydı bulunmuyor.');return}
- const backup={format:'codeweel-history',version:1,exportedAt:new Date().toISOString(),records:records.map(r=>({category:r.category,question:r.question,status:r.status,date:r.date,explanation:r.explanation||'',answer:r.answer||''}))};
+ const backup={format:'codeweel-history',version:1,exportedAt:new Date().toISOString(),records:records.map(r=>({category:r.category,question:r.question,status:r.status,date:r.date,explanation:typeof r.explanation==='string'?r.explanation:'',answer:typeof r.answer==='string'?r.answer:''}))};
  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
  const url=URL.createObjectURL(blob);
  const link=document.createElement('a');
