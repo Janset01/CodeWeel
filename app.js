@@ -105,23 +105,16 @@ function exerciseFor(picked){
  return ['“'+label+'” konusunda gerçek bir senaryo düşün ve ilgili komutları veya çözüm adımlarını yaz.','Kavramın temel kullanım amacını hatırla.','Çözüm seçtiğin senaryoya göre değişir.'];
 }
 let currentExercise=null,spinning=false,spinTimeout=null;
-const rowHeight=86;
+let previewInterval=null;
 function paintWheel(choices){
- const track=$('topicTrack');track.replaceChildren();
- $('wheel').disabled=!choices.length;const spinButton=$('spin');if(spinButton)spinButton.disabled=!choices.length;
- if(!choices.length){track.textContent='Bu filtrelere uygun konu bulunamadı.';return}
- const items=[...choices,...choices,...choices,...choices,...choices];
- items.forEach((item,i)=>{const row=document.createElement('span');row.className='topic-entry';const title=document.createElement('span');title.textContent=item.label;const badge=document.createElement('small');badge.textContent=String((i%choices.length)+1).padStart(2,'0');row.append(title,badge);track.appendChild(row)});
- track.style.transition='none';track.style.transform='translateY(0px)';
- requestAnimationFrame(()=>positionTrack(0,false));
+ const track=$('topicTrack');track.textContent=choices.length?'Hazır mısın?':'Bu filtrelerde konu yok';
+ $('spin').disabled=!choices.length;
 }
 function positionTrack(index,animate){
- const track=$('topicTrack'),viewport=$('wheel');
- const item=track.children[index];if(!item)return;
- const offset=viewport.clientHeight/2-(item.offsetTop+item.offsetHeight/2);
- track.style.transition=animate?'transform 3s cubic-bezier(.12,.72,.12,1)':'none';
- track.style.transform='translateY('+offset+'px)';
- track.querySelectorAll('.topic-entry').forEach((row,i)=>row.classList.toggle('active',i===index));
+ const choices=pool();if(!choices.length)return;
+ const item=choices[index%choices.length];
+ const track=$('topicTrack');track.classList.toggle('is-changing',animate);
+ track.textContent=item.label;
 }
 function refreshWheel(){
  if(spinning)return;
@@ -139,19 +132,20 @@ function spin(){
  const unseen=choices.filter(x=>!records.some(r=>r.question===x.label));
  const candidates=unseen.length?unseen:choices;
  const picked=candidates[Math.floor(Math.random()*candidates.length)];
- const index=choices.indexOf(picked),targetIndex=choices.length*3+index;
+ const index=choices.indexOf(picked);
  spinning=true;selected=null;
  ['category','subtopic','level'].forEach(id=>$(id).disabled=true);
- $('wheel').disabled=true;$('spin').disabled=true;
- positionTrack(targetIndex,true);
+ $('spin').disabled=true;
+ let tick=0;previewInterval=setInterval(()=>{const track=$('topicTrack');track.classList.add('is-changing');track.textContent=choices[tick++%choices.length].label;setTimeout(()=>track.classList.remove('is-changing'),110)},110);
  spinTimeout=setTimeout(()=>{
+  clearInterval(previewInterval);previewInterval=null;positionTrack(index,false);
   spinning=false;selected=picked.base;selectedLabel=picked.label;currentExercise=exerciseFor(picked);
   $('topic').textContent=selected[0]+' · '+picked.label+' · '+selected[1];
   $('question').textContent='Araştır: '+picked.label+' kavramını kendi cümlelerinle açıkla.';
   $('task').textContent=currentExercise[0];
   $('answer').value='';$('explanation').value='';$('feedback').textContent='';
   ['category','subtopic','level'].forEach(id=>$(id).disabled=false);
-  $('wheel').disabled=false;$('spin').disabled=false;
+  $('spin').disabled=false;
  },3050);
 }
 refreshWheel();$('spin').onclick=spin;
