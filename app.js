@@ -37,25 +37,66 @@ const bank=[
 'Mobil Geliştirme':['Activity','Jetpack Compose','State yönetimi'],
 'Linux':['Terminal','Dosya izinleri','Pipe']
 };
-const $=id=>document.getElementById(id);const cats=['Hepsi',...new Set(bank.map(x=>x[0]))];$('category').innerHTML=cats.map(x=>`<option>${x}</option>`).join('');function subtopicFor(item){const items=bank.filter(x=>x[0]===item[0]);return (subtopics[item[0]]||[])[items.indexOf(item)]||item[2]}
-function updateSubtopics(){const category=$('category').value;const options=category==='Hepsi'?[...new Set(bank.map(subtopicFor))]:subtopics[category]||[];$('subtopic').innerHTML=['Hepsi',...options].map(x=>{const option=document.createElement('option');option.textContent=x;return option.outerHTML}).join('')}
-$('category').addEventListener('change',updateSubtopics);updateSubtopics();
-let selected=null,angle=0;let records=[];try{const saved=JSON.parse(localStorage.getItem('cw-records')||'[]');records=Array.isArray(saved)?saved:[]}catch(e){console.warn('Geçersiz çalışma geçmişi:',e)}let timer=null,seconds=0,timerId=null;function pool(){return bank.filter(x=>($('category').value==='Hepsi'||x[0]===$('category').value)&&($('level').value==='Hepsi'||x[1]===$('level').value)&&($('subtopic').value==='Hepsi'||subtopicFor(x)===$('subtopic').value))}const wheelColors=['#7296eb','#a8bff6','#74c5bd','#a3e0d6','#f2c27c','#f8d8a4','#bda7ed','#d8c8f7'];
+const details={
+'Koşullar':['if ifadeleri','else ve else if','switch-case','İç içe koşullar','Mantıksal operatörler'],
+'Fonksiyonlar':['Fonksiyon tanımlama','Parametreler','return ve dönüş değeri','Kapsam (scope)','Fonksiyon çağırma'],
+'Özyineleme':['Temel durum','Özyinelemeli çağrı','Faktöriyel','Fibonacci','Çağrı yığını'],
+'Değişkenler':['Değişken tanımlama','Veri tipleri','Atama','Tür dönüşümü'],
+'Döngüler':['for döngüsü','while döngüsü','break ve continue','İç içe döngüler'],
+'Arama algoritmaları':['Doğrusal arama','İkili arama','Arama karmaşıklığı'],
+'Sınıflar ve nesneler':['Sınıf tanımlama','Nesne oluşturma','Özellikler','Metotlar'],
+'Kalıtım':['Üst sınıf','Alt sınıf','super','Metot ezme'],
+'Polimorfizm':['Metot ezme','Çok biçimlilik örnekleri','Arayüzler'],
+'SELECT ve WHERE':['SELECT','WHERE','ORDER BY','LIMIT','AND ve OR'],
+'UPDATE':['SET','WHERE ile güncelleme','Güvenli UPDATE'],
+'JOIN':['INNER JOIN','LEFT JOIN','RIGHT JOIN','JOIN koşulları'],
+'Git durumu':['git status','git diff','git log'],
+'Commit':['git add','git commit','Commit mesajları'],
+'Merge conflict':['Branch birleştirme','Çakışma çözme','Merge sonrası kontrol'],
+'IP adresleri':['IPv4','IPv6','Yerel IP','Alt ağ maskesi'],
+'DNS':['DNS sorgusu','DNS kayıtları','Alan adı çözümleme'],
+'TCP ve UDP':['TCP bağlantısı','UDP paketleri','Portlar'],
+'HTML':['HTML iskeleti','Başlık ve paragraf','Formlar','Semantik etiketler'],
+'DOM':['Eleman seçme','Metin değiştirme','Olay dinleyicileri'],
+'Asenkron işlemler':['Promise','async/await','fetch','Hata yakalama'],
+'Activity':['Activity yaşam döngüsü','Intent','Ekran geçişleri'],
+'Jetpack Compose':['Composable','Text ve Button','Column ve Row'],
+'State yönetimi':['remember','mutableStateOf','State hoisting'],
+'Terminal':['pwd ve ls','cd','Dosya oluşturma'],
+'Dosya izinleri':['chmod','chown','İzinleri okuma'],
+'Pipe':['Pipe operatörü','grep','Yönlendirme']
+};
+const $=id=>document.getElementById(id);
+const cats=['Hepsi',...new Set(bank.map(x=>x[0]))];
+$('category').innerHTML=cats.map(x=>'<option>'+x+'</option>').join('');
+function subtopicFor(item){const items=bank.filter(x=>x[0]===item[0]);return (subtopics[item[0]]||[])[items.indexOf(item)]||item[2]}
+function updateSubtopics(){const category=$('category').value;const options=category==='Hepsi'?[...new Set(bank.map(subtopicFor))]:subtopics[category]||[];const sel=$('subtopic');sel.replaceChildren();['Hepsi',...options].forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o)})}
+$('category').addEventListener('change',()=>{updateSubtopics();refreshWheel()});
+updateSubtopics();
+let selected=null,selectedLabel='',angle=0;let records=[];try{const saved=JSON.parse(localStorage.getItem('cw-records')||'[]');records=Array.isArray(saved)?saved:[]}catch(e){console.warn('Geçersiz çalışma geçmişi:',e)}let timer=null,seconds=0,timerId=null;function pool(){
+ const cat=$('category').value,sub=$('subtopic').value,level=$('level').value;
+ const base=bank.filter(x=>(cat==='Hepsi'||x[0]===cat)&&(level==='Hepsi'||x[1]===level));
+ if(sub==='Hepsi'){const seen=new Set();return base.filter(x=>{const key=x[0]+'|'+subtopicFor(x);if(seen.has(key))return false;seen.add(key);return true}).map(x=>({base:x,label:subtopicFor(x),detail:false}))}
+ const matched=base.filter(x=>subtopicFor(x)===sub);
+ if(!matched.length)return [];
+ return (details[sub]||[sub]).map(name=>({base:matched[0],label:name,detail:true}))
+}
+const wheelColors=['#7296eb','#a8bff6','#74c5bd','#a3e0d6','#f2c27c','#f8d8a4','#bda7ed','#d8c8f7'];
 function paintWheel(choices){
+ const wheel=$('wheel');wheel.querySelectorAll('.wheel-label').forEach(el=>el.remove());
  const count=choices.length;
- if(!count){$('wheel').style.background='#e5eaf1';$('wheel').title='Bu filtrelerde soru yok';$('spin').disabled=true;return}
+ if(!count){wheel.style.background='#e5eaf1';wheel.title='Bu filtrelerde konu yok';$('spin').disabled=true;return}
  $('spin').disabled=false;
  const slice=360/count;
- $('wheel').style.background='conic-gradient('+choices.map((item,i)=>wheelColors[i%wheelColors.length]+' '+(i*slice)+'deg '+((i+1)*slice)+'deg').join(',')+')';
- const wheel=$('wheel');wheel.querySelectorAll('.wheel-label').forEach(el=>el.remove());
- choices.forEach((item,i)=>{const label=document.createElement('span');label.className='wheel-label';label.textContent=subtopicFor(item);label.title=item[2];const degrees=(i+.5)*slice;label.style.transform='translate(-50%,-50%) rotate('+degrees+'deg) translateY(-105px) rotate('+(-degrees)+'deg)';wheel.appendChild(label)});
- wheel.title=choices.map((item,i)=>(i+1)+'. '+subtopicFor(item)+' — '+item[2]).join('\\n');
+ wheel.style.background='conic-gradient('+choices.map((item,i)=>wheelColors[i%wheelColors.length]+' '+(i*slice)+'deg '+((i+1)*slice)+'deg').join(',')+')';
+ choices.forEach((item,i)=>{const label=document.createElement('span');label.className='wheel-label';label.textContent=item.label;label.title=item.label;const degrees=(i+.5)*slice;label.style.transform='translate(-50%,-50%) rotate('+degrees+'deg) translateY(-105px) rotate('+(-degrees)+'deg)';wheel.appendChild(label)});
+ wheel.title=choices.map((item,i)=>(i+1)+'. '+item.label).join('\\n');
 }
-function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;angle=0;$('wheel').style.transition='none';$('wheel').style.transform='rotate(0deg)';void $('wheel').offsetWidth;$('wheel').style.transition='';$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
-['category','subtopic','level'].forEach(id=>$(id).addEventListener('change',refreshWheel));
+function refreshWheel(){if($('spin').dataset.spinning==='1')return;selected=null;selectedLabel='';angle=0;$('wheel').style.transition='none';$('wheel').style.transform='rotate(0deg)';void $('wheel').offsetWidth;$('wheel').style.transition='';$('topic').textContent='Bir konu seçmek için çarkı çevir.';$('question').textContent='';$('task').textContent='Çarkı çevirerek bir alıştırma seç.';$('answer').value='';$('explanation').value='';$('feedback').textContent='';paintWheel(pool())}
+['subtopic','level'].forEach(id=>$(id).addEventListener('change',refreshWheel));
 function spin(){
  const choices=pool();if(!choices.length)return;
- const unseen=choices.filter(x=>!records.some(r=>r.question===x[2]));
+ const unseen=choices.filter(x=>!records.some(r=>r.question===x.label));
  const candidates=unseen.length?unseen:choices;
  const picked=candidates[Math.floor(Math.random()*candidates.length)];
  const index=choices.indexOf(picked),slice=360/choices.length;
@@ -67,12 +108,12 @@ function spin(){
  ['category','subtopic','level'].forEach(id=>$(id).disabled=true);
  $('wheel').style.transform='rotate('+angle+'deg)';
  setTimeout(()=>{
-  selected=picked;
-  $('topic').textContent=selected[0]+' · '+subtopicFor(selected)+' · '+selected[1];
-  $('question').textContent=selected[2];$('task').textContent=selected[3];
+  selected=picked.base;selectedLabel=picked.label;
+  $('topic').textContent=selected[0]+' · '+picked.label+' · '+selected[1];
+  $('question').textContent=picked.detail?'Konu: '+picked.label+' — Bu kavramı araştırıp kendi cümlelerinle açıkla.':selected[2];$('task').textContent=picked.detail?'“'+picked.label+'” konusuyla ilgili küçük bir kod örneği yaz veya nasıl çalıştığını açıkla.':selected[3];
   $('answer').value='';$('explanation').value='';$('feedback').textContent='';
   $('spin').dataset.spinning='0';$('spin').disabled=false;
   ['category','subtopic','level'].forEach(id=>$(id).disabled=false);
  },3000);
 }
-refreshWheel();$('spin').onclick=spin;function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null}document.querySelectorAll('[data-timer]').forEach(b=>b.onclick=()=>{let id=b.dataset.timer;if(timer&&timerId=== (id==='researchTime'?'researchClock':'speechClock')){stopTimer();return}stopTimer();timerId=id==='researchTime'?'researchClock':'speechClock';seconds=Number($(id).value);updateClock();timer=setInterval(()=>{seconds--;updateClock();if(seconds<=0){stopTimer();alert('Süre doldu!')}},1000)});['researchTime','speechTime'].forEach(id=>$(id).onchange=()=>{if(!timer){$(id==='researchTime'?'researchClock':'speechClock').textContent=fmt(Number($(id).value))}});$('hint').onclick=()=>{$('feedback').textContent=selected?'İpucu: '+selected[4]:'Önce çarkı çevir.'};$('check').onclick=()=>{if(!selected)return;$('feedback').textContent='Örnek çözüm: '+selected[5]+' — Kendi çözümünle karşılaştır. Bu sürüm kodu çalıştırmaz veya otomatik doğrulamaz.'};function render(){let count=records.length;$('stats').textContent=`Toplam ${count} çalışma · ${records.filter(r=>r.status==='Öğrendim').length} öğrenildi · ${records.filter(r=>r.status==='Tekrar etmeliyim').length} tekrar bekliyor`;$('history').innerHTML=records.slice(-15).reverse().map(r=>`<div><strong>${r.category}</strong> — ${r.question} · ${r.status} <small>(${r.date})</small></div>`).join('')||'Henüz çalışma kaydı yok.'}document.querySelectorAll('.status').forEach(b=>b.onclick=()=>{if(!selected){alert('Önce bir konu seç.');return}records.push({category:selected[0],question:selected[2],status:b.dataset.status,date:new Date().toLocaleDateString('tr-TR'),explanation:$('explanation').value,answer:$('answer').value});localStorage.setItem('cw-records',JSON.stringify(records));render();$('feedback').textContent='Çalışman kaydedildi.'});$('clear').onclick=()=>{if(confirm('Tüm çalışma geçmişi silinsin mi?')){records=[];localStorage.removeItem('cw-records');render()}};let recognition=null;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(Speech){recognition=new Speech();recognition.lang='tr-TR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)$('explanation').value+=e.results[i][0].transcript+' '};recognition.onerror=e=>{$('mic').textContent='🎙️ Sesle yazmayı başlat';alert('Mikrofon kullanılamadı: '+e.error)};recognition.onend=()=>{$('mic').textContent='🎙️ Sesle yazmayı başlat'};let listening=false;$('mic').onclick=()=>{try{if(listening){recognition.stop();listening=false}else{recognition.start();listening=true;$('mic').textContent='⏹️ Kaydı durdur'}}catch(e){alert(e.message)}};recognition.onend=()=>{listening=false;$('mic').textContent='🎙️ Sesle yazmayı başlat'}}else{$('mic').disabled=true;$('mic').textContent='Ses tanıma bu tarayıcıda desteklenmiyor'}render();
+refreshWheel();$('spin').onclick=spin;function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null}document.querySelectorAll('[data-timer]').forEach(b=>b.onclick=()=>{let id=b.dataset.timer;if(timer&&timerId=== (id==='researchTime'?'researchClock':'speechClock')){stopTimer();return}stopTimer();timerId=id==='researchTime'?'researchClock':'speechClock';seconds=Number($(id).value);updateClock();timer=setInterval(()=>{seconds--;updateClock();if(seconds<=0){stopTimer();alert('Süre doldu!')}},1000)});['researchTime','speechTime'].forEach(id=>$(id).onchange=()=>{if(!timer){$(id==='researchTime'?'researchClock':'speechClock').textContent=fmt(Number($(id).value))}});$('hint').onclick=()=>{$('feedback').textContent=selected?'İpucu: '+selected[4]:'Önce çarkı çevir.'};$('check').onclick=()=>{if(!selected)return;$('feedback').textContent='Örnek çözüm: '+selected[5]+' — Kendi çözümünle karşılaştır. Bu sürüm kodu çalıştırmaz veya otomatik doğrulamaz.'};function render(){let count=records.length;$('stats').textContent=`Toplam ${count} çalışma · ${records.filter(r=>r.status==='Öğrendim').length} öğrenildi · ${records.filter(r=>r.status==='Tekrar etmeliyim').length} tekrar bekliyor`;$('history').innerHTML=records.slice(-15).reverse().map(r=>`<div><strong>${r.category}</strong> — ${r.question} · ${r.status} <small>(${r.date})</small></div>`).join('')||'Henüz çalışma kaydı yok.'}document.querySelectorAll('.status').forEach(b=>b.onclick=()=>{if(!selected){alert('Önce bir konu seç.');return}records.push({category:selected[0],question:selectedLabel||selected[2],status:b.dataset.status,date:new Date().toLocaleDateString('tr-TR'),explanation:$('explanation').value,answer:$('answer').value});localStorage.setItem('cw-records',JSON.stringify(records));render();$('feedback').textContent='Çalışman kaydedildi.'});$('clear').onclick=()=>{if(confirm('Tüm çalışma geçmişi silinsin mi?')){records=[];localStorage.removeItem('cw-records');render()}};let recognition=null;const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(Speech){recognition=new Speech();recognition.lang='tr-TR';recognition.continuous=true;recognition.interimResults=false;recognition.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)$('explanation').value+=e.results[i][0].transcript+' '};recognition.onerror=e=>{$('mic').textContent='🎙️ Sesle yazmayı başlat';alert('Mikrofon kullanılamadı: '+e.error)};recognition.onend=()=>{$('mic').textContent='🎙️ Sesle yazmayı başlat'};let listening=false;$('mic').onclick=()=>{try{if(listening){recognition.stop();listening=false}else{recognition.start();listening=true;$('mic').textContent='⏹️ Kaydı durdur'}}catch(e){alert(e.message)}};recognition.onend=()=>{listening=false;$('mic').textContent='🎙️ Sesle yazmayı başlat'}}else{$('mic').disabled=true;$('mic').textContent='Ses tanıma bu tarayıcıda desteklenmiyor'}render();
