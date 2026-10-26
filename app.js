@@ -234,6 +234,10 @@ importInput.onchange=async()=>{
     if(typeof value!=='string'||value.length>50000)throw new Error('Yedekte geçersiz alan var: '+key);
     result[key]=value;
    }
+   for(const key of ['category','question','status','date']){
+    if(!result[key].trim())throw new Error('Yedekte zorunlu alan boş: '+key);
+   }
+   if(!['Öğrendim','Tekrar etmeliyim'].includes(result.status))throw new Error('Yedekte geçersiz çalışma durumu.');
    return result;
   });
   if(!confirm(clean.length+' kayıt geri yüklenecek. Mevcut '+records.length+' kayıt değiştirilecek. Devam edilsin mi?'))return;
