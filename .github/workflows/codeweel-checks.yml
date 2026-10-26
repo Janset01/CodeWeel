@@ -1,0 +1,30 @@
+name: CodeWeel static checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax
+        run: node --check app.js
+      - name: Check HTML element references and release script
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const assert = require('node:assert/strict');
+          const js = fs.readFileSync('app.js', 'utf8');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const ids = [...js.matchAll(/\$\('([^']+)'\)/g)].map(m => m[1]);
+          const missing = [...new Set(ids)].filter(id => !html.includes('id="' + id + '"'));
+          assert.deepEqual(missing, [], 'Missing HTML elements: ' + missing.join(', '));
+          assert.match(html, /<script\s+src="app\.js\?v=\d+"\s*>/);
+          assert.match(js, /escapeHTML\(r\.question\)/);
+          assert.match(js, /backup\.format\s*!==\s*'codeweel-history'/);
+          console.log('Static checks passed for ' + new Set(ids).size + ' element references.');
+          NODE
