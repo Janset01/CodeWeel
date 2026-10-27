@@ -105,23 +105,30 @@ function exerciseFor(picked){
  return ['“'+label+'” konusunda gerçek bir senaryo düşün ve ilgili komutları veya çözüm adımlarını yaz.','Kavramın temel kullanım amacını hatırla.','Çözüm seçtiğin senaryoya göre değişir.'];
 }
 let currentExercise=null,spinning=false,spinTimeout=null;
-let previewInterval=null;
-function paintWheel(choices){
- const track=$('topicTrack');track.textContent=choices.length?'Hazır mısın?':'Bu filtrelerde konu yok';
- $('spin').disabled=!choices.length;
+let spinAudio=null;
+function spinTick(strength=0.06){
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+  spinAudio=spinAudio||new Ctx();if(spinAudio.state==='suspended')spinAudio.resume().catch(()=>{});
+  const o=spinAudio.createOscillator(),g=spinAudio.createGain(),t=spinAudio.currentTime;
+  o.type='triangle';o.frequency.setValueAtTime(460,t);o.frequency.exponentialRampToValueAtTime(180,t+0.045);
+  g.gain.setValueAtTime(Math.max(0.0001,strength),t);g.gain.exponentialRampToValueAtTime(0.0001,t+0.055);
+  o.connect(g);g.connect(spinAudio.destination);o.start(t);o.stop(t+0.06);
+ }catch(e){console.warn('Çark sesi kullanılamadı:',e)}
 }
-function positionTrack(index,animate){
- const choices=pool();if(!choices.length)return;
- const item=choices[index%choices.length];
- const track=$('topicTrack');track.classList.toggle('is-changing',animate);
- track.textContent=item.label;
+function wheelItems(labels,selectedIndex){
+ const track=$('topicTrack');track.replaceChildren();
+ labels.forEach((label,i)=>{const el=document.createElement('span');el.className='spin-item'+(i===selectedIndex?' is-selected':'');el.textContent=label;track.appendChild(el)});
+}
+function paintWheel(choices){
+ wheelItems([choices.length?'Hazır mısın?':'Bu filtrelerde konu yok'],0);
+ $('spin').disabled=!choices.length;
 }
 function refreshWheel(){
  if(spinning)return;
  selected=null;selectedLabel='';currentExercise=null;
- $('topic').textContent='Konu seçmek için kartlara dokun.';
- $('question').textContent='';
- $('task').textContent='Bir konu seçerek alıştırmaya başla.';
+ $('topic').textContent='Bir konu seçmek için çarkı çevir.';
+ $('question').textContent='';$('task').textContent='Bir konu seçerek alıştırmaya başla.';
  $('answer').value='';$('explanation').value='';$('feedback').textContent='';
  paintWheel(pool());
 }
@@ -132,21 +139,36 @@ function spin(){
  const unseen=choices.filter(x=>!records.some(r=>r.question===x.label));
  const candidates=unseen.length?unseen:choices;
  const picked=candidates[Math.floor(Math.random()*candidates.length)];
- const index=choices.indexOf(picked);
  spinning=true;selected=null;
- ['category','subtopic','level'].forEach(id=>$(id).disabled=true);
- $('spin').disabled=true;
- let tick=0;previewInterval=setInterval(()=>{const track=$('topicTrack');track.classList.add('is-changing');track.textContent=choices[tick++%choices.length].label;setTimeout(()=>track.classList.remove('is-changing'),110)},110);
- spinTimeout=setTimeout(()=>{
-  clearInterval(previewInterval);previewInterval=null;positionTrack(index,false);
+ ['category','subtopic','level'].forEach(id=>$(id).disabled=true);$('spin').disabled=true;
+ try{const Ctx=window.AudioContext||window.webkitAudioContext;if(Ctx){spinAudio=spinAudio||new Ctx();spinAudio.resume().catch(()=>{})}}catch(e){}
+ const selector=$('wheel'),track=$('topicTrack');
+ const itemHeight=window.matchMedia('(max-width:700px)').matches?80:100;
+ const total=32;
+ const labels=Array.from({length:total},(_,i)=>i===total-2?picked.label:choices[Math.floor(Math.random()*choices.length)].label);
+ wheelItems(labels,total-2);
+ const finalOffset=selector.clientHeight/2-(total-2+0.5)*itemHeight;
+ const startOffset=selector.clientHeight/2-itemHeight/2;
+ track.style.transition='none';track.style.transform='translateY('+startOffset+'px)';
+ void track.offsetHeight;
+ const start=performance.now(),duration=3400;
+ let lastTick=-1;
+ function frame(now){
+  const p=Math.min(1,(now-start)/duration);
+  const eased=1-Math.pow(1-p,3);
+  const offset=startOffset+(finalOffset-startOffset)*eased;
+  track.style.transform='translateY('+offset+'px)';
+  const index=Math.max(0,Math.floor((startOffset-offset)/itemHeight));
+  if(index!==lastTick){lastTick=index;spinTick(0.035)}
+  if(p<1){spinTimeout=requestAnimationFrame(frame);return}
+  spinTimeout=null;track.style.transform='translateY('+finalOffset+'px)';
   spinning=false;selected=picked.base;selectedLabel=picked.label;currentExercise=exerciseFor(picked);
   $('topic').textContent=selected[0]+' · '+picked.label+' · '+selected[1];
   $('question').textContent='Araştır: '+picked.label+' kavramını kendi cümlelerinle açıkla.';
-  $('task').textContent=currentExercise[0];
-  $('answer').value='';$('explanation').value='';$('feedback').textContent='';
-  ['category','subtopic','level'].forEach(id=>$(id).disabled=false);
-  $('spin').disabled=false;
- },3050);
+  $('task').textContent=currentExercise[0];$('answer').value='';$('explanation').value='';$('feedback').textContent='';
+  ['category','subtopic','level'].forEach(id=>$(id).disabled=false);$('spin').disabled=false;
+ }
+ spinTimeout=requestAnimationFrame(frame);
 }
 refreshWheel();$('spin').onclick=spin;
 function fmt(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}let timerDeadline=0;function updateClock(){if(timerId)$(timerId).textContent=fmt(seconds)}function stopTimer(){clearInterval(timer);timer=null;timerDeadline=0}function tickTimer(){if(!timer||!timerDeadline)return;seconds=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));updateClock();if(seconds===0){const finishedId=timerId;stopTimer();playTimerChime();showTimerMessage(finishedId)}}document.addEventListener('visibilitychange',()=>{if(!document.hidden)tickTimer()});
