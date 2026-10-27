@@ -126,3 +126,33 @@ main>.panel:not(.wheel-panel){background:linear-gradient(140deg,#76314c 0%,#5822
 .feature-card:hover{transform:translateY(-5px);box-shadow:0 23px 48px #13071583,inset 0 1px #fff8}
 .workspace .wheel-panel #spin{box-shadow:0 9px 28px #13071570,0 0 25px #e8b4c22b}
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
+
+/* Vibrant jewel-tone palette: ruby, magenta, coral and amber instead of cool pastels */
+html{background:#220713}
+body{background:radial-gradient(ellipse 70% 52% at 10% 12%,#b81b56a6 0%,transparent 68%),radial-gradient(ellipse 62% 62% at 93% 37%,#dc4b287a 0%,transparent 72%),radial-gradient(ellipse 60% 45% at 50% 92%,#8421518c 0%,transparent 70%),linear-gradient(125deg,#250816 0%,#551029 48%,#300a20 100%);background-attachment:fixed}
+body::before{background:radial-gradient(ellipse 34% 30% at 20% 30%,#ff26705c,transparent 76%),radial-gradient(ellipse 33% 38% at 80% 57%,#ff863b42,transparent 75%),radial-gradient(ellipse 31% 34% at 50% 85%,#e2187248,transparent 78%);filter:blur(36px)}
+body::after{opacity:.4;background:repeating-linear-gradient(115deg,transparent 0 115px,#ff8c7d12 116px,transparent 118px 240px),radial-gradient(circle at 50% 0%,#ff52832b,transparent 53%)}
+.topbar{border-bottom-color:#ff7c9b55;background:linear-gradient(90deg,#c62c4d20,transparent 65%,#e46b3422)}
+.brand span:not(.brand-mark),.brand-mark,.hero-copy-top h2 em{color:#ff7198}
+.brand-mark{border-color:#ff7198}
+.topbar nav a:hover{color:#ff9a65}
+.hero-copy-top h2 em{text-shadow:0 0 28px #ff276c99}
+.eyebrow,.stage-overline{color:#ffb071}
+.hero-copy-top p,.stage-caption,.workspace .wheel-panel #question{color:#ffd4b7}
+.filter-bar select{background:#ffe0cb;color:#471425;border-color:#ef9e82;box-shadow:0 5px 20px #21051345}
+.minimal-selector{border-color:#ff7b9b9e;background:linear-gradient(100deg,#ef306119,transparent 38%,#ff963b17 85%);box-shadow:0 16px 52px #14020e9c,0 0 42px #ff3f7740,inset 0 1px #ffd2a060}
+.minimal-selector::before{background:linear-gradient(to bottom,#3d0d23f7,transparent)}
+.minimal-selector::after{background:linear-gradient(to top,#3d0d23f7,transparent)}
+.minimal-track .spin-item{color:#ffc49f}
+.minimal-track .spin-item.is-selected{color:#fff4e9;text-shadow:0 0 26px #ff3978b5}
+.workspace .wheel-panel::before{background:radial-gradient(ellipse,#ff32784a,transparent 69%)}
+.workspace .wheel-panel #spin{background:linear-gradient(120deg,#ffb05f,#ff7387);color:#390d22;box-shadow:0 9px 30px #ff3f6c55,0 10px 30px #13030b99}
+.workspace .wheel-panel #spin:hover{filter:brightness(1.1)}
+main>.panel:not(.wheel-panel){background:linear-gradient(140deg,#8c214c 0%,#681a3b 48%,#46132c 100%);border-color:#fa739c8a;box-shadow:0 23px 55px #14030e99,inset 0 1px #ffd4c245}
+main>.panel:not(.wheel-panel) button{background:#cf395e}
+main>.panel:not(.wheel-panel) button.secondary{background:#ff9b83;color:#3a0c20}
+main>.panel:not(.wheel-panel) button.status:first-child{background:#477b56}
+.feature-card.latte{background:#ffb17c}.feature-card.pink{background:#ff779c}.feature-card.green{background:#357d63;color:#fff8e8}.feature-card.coffee{background:#ef7d56}
+.feature-card{box-shadow:0 17px 40px #19030f80,inset 0 1px #fff8}
+.feature-card b{background:#711638}
+#calisma .clock,#anlat .clock{color:#ffb17d}
