@@ -96,3 +96,12 @@ main>.panel:not(.wheel-panel) .controls{justify-content:flex-start;gap:12px}
 .minimal-track .spin-item.is-selected{color:#fff4e6;opacity:1;font-weight:700}
 .minimal-track.is-changing{opacity:1;transform:none}
 @media(max-width:700px){.hero-copy-top{text-align:center!important}.minimal-stage{min-height:330px}.minimal-selector{height:240px!important}.minimal-track .spin-item{height:80px;font-size:clamp(19px,5vw,28px)}.workspace .wheel-panel{padding:10px 0!important}}
+
+/* Wider, taller topic reel */
+main{max-width:1380px}
+.workspace{max-width:1320px!important}
+.workspace .wheel-panel{max-width:1280px!important}
+.minimal-selector{width:min(1160px,100%)!important;height:360px!important}
+.minimal-stage{min-height:480px}
+.minimal-track .spin-item{height:120px;font-size:clamp(29px,3.5vw,48px)}
+@media(max-width:700px){.minimal-selector{height:270px!important}.minimal-track .spin-item{height:90px;font-size:clamp(21px,5.5vw,32px)}.minimal-stage{min-height:360px}}
