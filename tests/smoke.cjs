@@ -17,7 +17,7 @@ const path = require('node:path');
   await page.selectOption('#subtopic', {label:'JOIN'});
   await page.locator('#spin').click();
   assert(await page.locator('#category').isDisabled());
-  await page.waitForTimeout(3200);
+  await page.waitForTimeout(3900);
   assert.match(await page.locator('#question').innerText(), /JOIN/);
   assert.match(await page.locator('#topic').innerText(), /SQL.*JOIN.*İleri/);
   await page.locator('#answer').fill('SELECT * FROM Ogrenciler INNER JOIN Siniflar ON Ogrenciler.sinif_id = Siniflar.id;');
