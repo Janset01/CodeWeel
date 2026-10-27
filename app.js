@@ -143,9 +143,18 @@ function spin(){
  ['category','subtopic','level'].forEach(id=>$(id).disabled=true);$('spin').disabled=true;
  try{const Ctx=window.AudioContext||window.webkitAudioContext;if(Ctx){spinAudio=spinAudio||new Ctx();spinAudio.resume().catch(()=>{})}}catch(e){}
  const selector=$('wheel'),track=$('topicTrack');
- const itemHeight=window.matchMedia('(max-width:700px)').matches?80:100;
+ const itemHeight=window.matchMedia('(max-width:700px)').matches?90:120;
  const total=32;
- const labels=Array.from({length:total},(_,i)=>i===total-2?picked.label:choices[Math.floor(Math.random()*choices.length)].label);
+ // Never show duplicate topic names in the three visible slots.
+ const uniqueLabels=[...new Set(choices.map(x=>x.label))];
+ const labels=[];
+ for(let i=0;i<total;i++){
+  if(i===total-2){labels.push(picked.label);continue}
+  const forbidden=new Set(labels.slice(-2).filter(Boolean));
+  if(i===total-3||i===total-1)forbidden.add(picked.label);
+  const available=uniqueLabels.filter(label=>!forbidden.has(label));
+  labels.push(available.length?available[Math.floor(Math.random()*available.length)]:'');
+ }
  wheelItems(labels,total-2);
  const finalOffset=selector.clientHeight/2-(total-2+0.5)*itemHeight;
  const startOffset=selector.clientHeight/2-itemHeight/2;
